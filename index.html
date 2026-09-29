@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Canteen Rush – Survive the lunch break</title>
+<style>
+:root{--bg:#f5f3ee;--ink:#1f1f1f;--mute:#5a5a5a;--accent:#c0392b}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+.wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{width:100%;max-width:680px;background:#fff;border-radius:22px;padding:30px;box-shadow:0 12px 40px rgba(0,0,0,.07)}
+h1{font-size:40px;margin:0 0 8px}
+h2{margin:0 0 6px;font-size:26px}
+p{line-height:1.6;color:var(--mute);margin:8px 0}
+.small{font-size:13px;color:#888}
+button{border:none;border-radius:14px;padding:14px 20px;font-size:16px;font-weight:600;cursor:pointer;background:var(--ink);color:#fff;transition:.15s}
+button:hover:not(:disabled){transform:translateY(-2px)}
+button:disabled{opacity:.35;cursor:not-allowed}
+:focus-visible{outline:3px solid #2b6cb0;outline-offset:2px}
+.primary{width:100%;margin-top:18px;padding:16px}
+.hud{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px;font-weight:600;font-size:14px}
+.clock{color:var(--accent);font-variant-numeric:tabular-nums}
+.bar{height:8px;background:#e6e2d8;border-radius:8px;overflow:hidden;margin-bottom:22px}
+.bar i{display:block;height:100%;background:var(--ink);transition:width .4s}
+.choices{display:grid;gap:10px;margin-top:16px}
+.choice{background:#f3f1ea;color:var(--ink);text-align:left;border:2px solid transparent}
+.choice:hover:not(:disabled){background:#e9e5d9}
+.choice.on{border-color:var(--ink);background:#fff}
+.screen{background:#1f1f1f;color:#fff;border-radius:16px;padding:18px 22px;margin:14px 0;font-size:18px;line-height:2}
+.screen .q{color:#ffb4a8}
+.range{width:100%;margin:22px 0 4px;accent-color:var(--ink)}
+.ticks{display:flex;justify-content:space-between;font-size:12px;color:#888}
+.big{font-size:44px;font-weight:800;margin:6px 0}
+.reveal{background:#fdf0ee;border-radius:14px;padding:16px;margin-top:14px}
+.q{margin-top:18px}
+.q label{display:block;margin:8px 0;padding:12px;background:#f5f3ee;border-radius:10px;cursor:pointer}
+textarea,input[type=text]{width:100%;padding:13px;border:1px solid #d9d4c7;border-radius:10px;font-size:16px;margin-top:8px;font-family:inherit}
+.style{background:#f3f1ea;border-radius:16px;padding:18px;margin:14px 0}
+.style b{font-size:26px;display:block}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="card" id="stage"></div></div>
+
+<script>
+/* ============ CONFIG ============ */
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxWx4C_roP-w8X_8FpXDOuTyhJBlLk38Xy7RRgokvxVj6QK75BC6SjADLep0fq6fGh-/exec";
+const CLOCK = ["15:00","12:40","10:20","08:32","05:45","02:50"];
+
+const A = {}, T = {};
+let t0 = 0;
+const $ = id => document.getElementById(id);
+const shuffle = a => a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);
+const lap = () => { const s=+((Date.now()-t0)/1000).toFixed(1); t0=Date.now(); return s; };
+
+function shell(step,total,title,sub,clock){
+  $("stage").innerHTML = `
+    <div class="hud"><span>Mission ${step+1} of ${total}</span><span class="clock">${clock?"Break time left: "+clock:""}</span></div>
+    <div class="bar"><i style="width:${(step/total)*100}%"></i></div>
+    <h2>${title}</h2><p>${sub}</p><div id="body"></div>`;
+  t0 = Date.now();
+  return $("body");
+}
+function options(el,opts,cb){
+  const box=document.createElement("div"); box.className="choices";
+  opts.forEach(o=>{const b=document.createElement("button");b.className="choice";b.textContent=o;b.onclick=()=>cb(o,b);box.appendChild(b);});
+  el.appendChild(box); return box;
+}
+
+/* Pick exactly 2 (or the "none" option) + optional "something else" text */
+function pickTwo(b,opts,none,done){
+  const picks=[];
+  const sync=()=>{ go.disabled = !(picks.length===2 || picks[0]===none); };
+  const box=options(b,shuffle(opts).concat(none),(o,btn)=>{
+    const i=picks.indexOf(o);
+    if(i>-1){picks.splice(i,1);btn.classList.remove("on");}
+    else if(o===none){picks.length=0;box.querySelectorAll(".on").forEach(x=>x.classList.remove("on"));picks.push(o);btn.classList.add("on");}
+    else{
+      if(picks[0]===none){picks.length=0;box.querySelectorAll(".on").forEach(x=>x.classList.remove("on"));}
+      if(picks.length<2){picks.push(o);btn.classList.add("on");}
+    }
+    sync();
+  });
+  const other=document.createElement("input"); other.type="text"; other.placeholder="Something else that would help more? (optional)"; b.appendChild(other);
+  const go=document.createElement("button"); go.className="primary"; go.textContent="Confirm"; go.disabled=true;
+  go.onclick=()=>done(picks.map(p=>p.split(":")[0]).join(" + "),other.value); b.appendChild(go);
+}
+
+function rapid(list,i,total,step,clock,done){
+  const b=shell(step,total,"Would you still wait?","Rapid fire. Pick fast.",clock), s=list[i];
+  b.innerHTML=`<p class="small">Situation ${i+1} of ${list.length}</p><div style="font-size:22px;font-weight:600;margin:6px 0">${s.text}</div>`;
+  options(b,s.opts,o=>{A[s.key]=o;T[s.key]=lap(); i+1<list.length?rapid(list,i+1,total,step,clock,done):done();});
+}
+
+/* ============ INTRO ============ */
+function intro(){
+  $("stage").innerHTML=`
+    <div style="font-size:48px">🍔</div>
+    <h1>Canteen Rush</h1>
+    <p>A short game about the college canteen at lunch. No right or wrong answers, go with your gut. Takes about 7 minutes and is anonymous.</p>
+    <p><strong>Who are you?</strong></p>
+    <div class="choices">
+      <button class="choice" onclick="A.role='student';m1()">🎓 I'm a student</button>
+      <button class="choice" onclick="A.role='staff';s1()">🍳 I work in the canteen</button>
+    </div>`;
+}
+
+/* ============ STUDENT FLOW (6 missions) ============ */
+const ST=6;
+function m1(){
+  const b=shell(0,ST,"You have 15 minutes","Class ended at 1:00 PM. Next class starts at 1:15 PM. You've just reached the canteen. What do you do first?",CLOCK[0]);
+  options(b,shuffle(["🍔 Check what's available","👀 Look at the queue","🪑 Find a seat first","🚶 Leave and get food elsewhere"]),o=>{A.firstAction=o;T.firstAction=lap();m2();});
+}
+function m2(){
+  const b=shell(1,ST,"Pick your nightmare","Which situation would annoy you the MOST?",CLOCK[1]);
+  options(b,shuffle(["15 people ahead of you","Your favourite item is unavailable","You ordered but don't know when it'll be ready","You can't find a place to sit","Something else annoys me more"]),o=>{A.nightmare=o;T.nightmare=lap();m3();});
+}
+function m3(){
+  const actual=[6,12,18][Math.floor(Math.random()*3)];   // randomised stimulus, recorded
+  const b=shell(2,ST,"Guess the wait","Your order is being prepared. There are 8 people waiting and the counter is busy. How long do you think you'll wait?",CLOCK[2]);
+  b.innerHTML=`<input class="range" id="wait" type="range" min="1" max="20" value="8" aria-label="Guessed wait in minutes">
+    <div class="ticks"><span>1 min</span><span>5</span><span>10</span><span>15</span><span>20+ min</span></div>
+    <div class="big" id="waitOut">8 min</div><button class="primary" id="lock">Lock in my guess</button>`;
+  const r=$("wait"),out=$("waitOut");
+  r.oninput=()=>out.textContent=(r.value==20?"20+":r.value)+" min";
+  $("lock").onclick=()=>{
+    A.guessedWait=+r.value;A.actualWait=actual;T.guessedWait=lap();
+    const g=A.guessedWait,gl=g==20?"20+":g;
+    const msg=actual>g?`You guessed ${gl} min. Actual wait: ${actual} minutes. 😭`:actual<g?`You guessed ${gl} min. Actual wait: ${actual} minutes. Faster than you feared.`:`You guessed ${gl} min. Spot on: ${actual} minutes.`;
+    b.innerHTML=`<div class="reveal"><strong>${msg}</strong></div><h2 style="margin-top:22px">Would you have waited?</h2>`;
+    options(b,["Yes, I'd wait","No, I'd leave"],o=>{
+      A.wouldWait=o;
+      b.innerHTML=`<h2>What would have made the wait feel better?</h2>`;
+      options(b,shuffle(["“You're #8 in the queue”","“Ready in ~10 min”","“Order is being prepared”","“We'll notify you when it's ready”","Nothing – I just want the food"]),o2=>{A.waitFix=o2;T.waitFix=lap();m4();});
+    });
+  };
+}
+function m4(){
+  const b=shell(3,ST,"Canteen telepathy","This is what the canteen board shows right now. Some things are missing.",CLOCK[3]);
+  b.innerHTML=`<div class="screen">🍜 Maggi – ₹40<br><span class="q">❓ Availability</span><br><span class="q">👥 Queue: ???</span><br><span class="q">⏱️ Wait: ???</span><br><span class="q">🪑 Seats: ???</span></div>
+    <p><strong>You can reveal ONLY ONE piece of information before joining the queue. Which one?</strong></p>`;
+  options(b,shuffle(["🍜 Availability","👥 Queue size","⏱️ Estimated waiting time","🪑 Seating availability","None – I'd decide on the spot"]),o=>{A.oneInfo=o;T.oneInfo=lap();m5();});
+}
+function m5(){
+  const b=shell(4,ST,"You are the canteen manager","You can make two changes for tomorrow's lunch rush. Pick exactly 2 (or \"none of these\").",CLOCK[4]);
+  pickTwo(b,[
+    "Live menu: see what's available before reaching the counter",
+    "Queue tracker: see how many people are ahead",
+    "Order tracker: see if your food is preparing or ready",
+    "Pre-order: order before reaching the canteen",
+    "Seat finder: see available seating",
+    "Extra counter: more staff and a second billing line",
+    "Faster payment: UPI/QR at the counter"],
+    "None of these would help much",
+    (v,other)=>{A.upgrades=v;A.upgradesOther=other;T.upgrades=lap();m6();});
+}
+const RAPID=[
+  {key:"w1",text:"12 people ahead of you. Your break is 20 minutes.",opts:["Wait","Leave"]},
+  {key:"w2",text:"Your favourite food is unavailable. Another item has no queue.",opts:["Wait for it","Switch item","Leave"]},
+  {key:"w3",text:"Order placed. You have no idea when it will be ready.",opts:["Wait","Keep checking","Leave"]},
+  {key:"w4",text:"The queue is long, but the app says the wait is 5 minutes.",opts:["Wait","Leave"]},
+  {key:"w5",text:"You can order on your phone now and collect in 10 minutes, but you must pick the item without seeing the queue.",opts:["Use it","Stick to the counter","Depends"]}
+];
+function m6(){rapid(RAPID,0,ST,5,CLOCK[5],finishStudent);}
+
+function survivalStyle(){
+  const v=RAPID.map(r=>A[r.key]),leaves=v.filter(x=>x==="Leave").length,waits=v.filter(x=>x==="Wait"||x==="Wait for it").length;
+  if(A.firstAction.includes("Leave")||leaves>=2)return["The Escape Artist 🏃","You don't gamble with break time. If it looks slow, you're gone."];
+  if(waits>=3)return["The Queue Warrior ⚔️","You'll stand in line for the food you want."];
+  return["The Strategist 🧠","You weigh the situation and adapt as things change."];
+}
+const radios=(n,a)=>a.map(x=>`<label><input type="radio" name="${n}" value="${x}"> ${x}</label>`).join("");
+function finishStudent(){
+  const [name,desc]=survivalStyle();A.style=name;
+  $("stage").innerHTML=`
+    <div style="font-size:48px">🎉</div><h1>Break over!</h1>
+    <div class="style"><span class="small">Your canteen survival style (just for fun)</span><b>${name}</b><p style="margin:0">${desc}</p></div>
+    <div class="q"><strong>Which situation would make you most likely to leave, and why? (optional)</strong><textarea id="leaveWhy" rows="2"></textarea></div>
+    <div class="q"><strong>How often do you use the canteen?</strong>${radios("freq",["Every day / 4–6 days a week","2–3 days a week","Once a week","Less than once a week","Almost never"])}</div>
+    <div class="q"><strong>What do you usually buy? (any)</strong>
+      ${["Full meal","Snack","Beverage"].map(x=>`<label><input type="checkbox" name="buy" value="${x}"> ${x}</label>`).join("")}</div>
+    <div class="q"><strong>Food preference</strong>${radios("diet",["Vegetarian","Non-vegetarian","No preference"])}</div>
+    <div class="q"><strong>Describe the canteen rush in one word.</strong><input type="text" id="oneWord" placeholder="e.g. chaotic"></div>
+    <div class="q"><strong>Anything you've just gotten used to at the canteen? (optional)</strong><textarea id="extra" rows="2"></textarea></div>
+    <button class="primary" id="submitBtn" onclick="submitResults()">Submit my response</button><p id="msg" class="small"></p>`;
+}
+
+/* ============ STAFF FLOW (5 missions) ============ */
+const SS=5;
+function s1(){
+  const b=shell(0,SS,"Your role","What best describes your role in the canteen?");
+  options(b,["Owner / manager","Cook / food preparation","Cashier / counter","Other"],o=>{A.staffRole=o;T.staffRole=lap();s2();});
+}
+function s2(){
+  const b=shell(1,SS,"The lunch rush hits","It's the busiest 30 minutes of the day. Which part is hardest to handle?");
+  options(b,shuffle(["Taking orders","Taking payments","Handing over food / tokens","Answering questions (menu, availability)","Preparing food on time","Handling everything at once"]),o=>{A.staffHardest=o;T.staffHardest=lap();s3();});
+}
+function s3(){
+  const b=shell(2,SS,"Pick your pressure","What puts the most pressure on you during the rush?");
+  options(b,shuffle(["A long queue","Constant interruptions","Order mistakes","Running out of items","Payment delays","Everything happening together","Something else"]),o=>{A.staffPressure=o;T.staffPressure=lap();s4();});
+}
+const SRAPID=[
+  {key:"s1",text:"A student asks if an item is available while you're mid-order.",opts:["Answer immediately","Point to the menu board","Ask them to wait"]},
+  {key:"s2",text:"An item runs out during the rush.",opts:["Tell each student at the counter","Update the board","Only say when asked"]},
+  {key:"s3",text:"Students could send orders from their phones and you'd see a list of them.",opts:["That would help","That would add work","Depends"]},
+  {key:"s4",text:"Ordering and payment happen at the same counter.",opts:["Fine as it is","I'd separate them","No opinion"]}
+];
+function s4(){rapid(SRAPID,0,SS,3,"",s5);}
+function s5(){
+  const b=shell(4,SS,"You are the owner","You can make two changes for tomorrow's lunch rush. Pick exactly 2 (or \"none of these\").");
+  pickTwo(b,[
+    "Digital order list: see student orders in one place",
+    "Separate payment counter or QR payments",
+    "Availability board that's easy to update",
+    "More staff at peak hours",
+    "Token / ready display for collection",
+    "Menu boards or signs so fewer questions reach me"],
+    "None of these would help much",
+    (v,other)=>{A.staffUpgrades=v;A.staffUpgradesOther=other;T.staffUpgrades=lap();finishStaff();});
+}
+function finishStaff(){
+  $("stage").innerHTML=`
+    <div style="font-size:48px">🎉</div><h1>Shift over!</h1><p>Thanks for helping us understand the rush.</p>
+    <div class="q"><strong>Describe the lunch rush in one word.</strong><input type="text" id="oneWord" placeholder="e.g. chaotic"></div>
+    <div class="q"><strong>Anything students do that makes the rush harder, or easier? (optional)</strong><textarea id="extra" rows="2"></textarea></div>
+    <button class="primary" id="submitBtn" onclick="submitResults()">Submit my response</button><p id="msg" class="small"></p>`;
+}
+
+/* ============ SUBMIT ============ */
+async function submitResults(){
+  const btn=$("submitBtn"),msg=$("msg"),val=n=>{const x=document.querySelector(`input[name="${n}"]:checked`);return x?x.value:"";};
+  const data=Object.assign({timestamp:new Date().toISOString()},A,{
+    frequency:val("freq"),diet:val("diet"),
+    usuallyBuys:[...document.querySelectorAll('input[name="buy"]:checked')].map(x=>x.value).join(" | "),
+    leaveWhy:$("leaveWhy")?$("leaveWhy").value:"",
+    oneWord:$("oneWord").value,extra:$("extra").value,timings:JSON.stringify(T)});
+  btn.disabled=true;btn.textContent="Saving…";
+  try{
+    await fetch(GOOGLE_SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});
+    msg.textContent="✓ Response saved. Thank you!";btn.textContent="Response saved";
+  }catch(e){
+    console.error(e);msg.textContent="Couldn't save. Check your connection and try again.";
+    btn.disabled=false;btn.textContent="Submit my response";
+  }
+}
+intro();
+</script>
+</body>
+</html>
