@@ -3,249 +3,273 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Canteen Rush – Survive the lunch break</title>
+<title>Canteen Diaries – a probe kit</title>
 <style>
-:root{--bg:#f5f3ee;--ink:#1f1f1f;--mute:#5a5a5a;--accent:#c0392b}
+:root{--kraft:#e6d9c0;--paper:#fffdf8;--ink:#2a2119;--mute:#6b5d4d;--red:#c0392b;--tape:#f2d16b}
 *{box-sizing:border-box}
-body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--ink)}
-.wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-.card{width:100%;max-width:680px;background:#fff;border-radius:22px;padding:30px;box-shadow:0 12px 40px rgba(0,0,0,.07)}
-h1{font-size:40px;margin:0 0 8px}
-h2{margin:0 0 6px;font-size:26px}
-p{line-height:1.6;color:var(--mute);margin:8px 0}
-.small{font-size:13px;color:#888}
-button{border:none;border-radius:14px;padding:14px 20px;font-size:16px;font-weight:600;cursor:pointer;background:var(--ink);color:#fff;transition:.15s}
-button:hover:not(:disabled){transform:translateY(-2px)}
-button:disabled{opacity:.35;cursor:not-allowed}
+body{margin:0;background:var(--kraft);color:var(--ink);font-family:Georgia,'Times New Roman',serif}
+.hand{font-family:'Segoe Print','Bradley Hand','Comic Sans MS',cursive}
+.book{max-width:720px;margin:0 auto;padding:18px 14px 90px}
+.page{display:none;position:relative;background:var(--paper);border-radius:6px;padding:34px 30px 30px;box-shadow:0 10px 30px rgba(60,40,10,.25);
+ background-image:repeating-linear-gradient(transparent 0 31px,#efe6d4 31px 32px)}
+.page.on{display:block}
+.page:before{content:"";position:absolute;top:-12px;left:50%;width:110px;height:26px;margin-left:-55px;background:var(--tape);opacity:.85;transform:rotate(-2deg)}
+h1{font-size:44px;margin:0 0 6px;line-height:1.05}
+h2{font-size:26px;margin:0 0 4px}
+.tag{display:inline-block;font-family:Arial,sans-serif;font-size:12px;letter-spacing:1px;text-transform:uppercase;background:var(--ink);color:#fff;padding:4px 10px;border-radius:20px;margin-bottom:12px}
+p,li{line-height:1.6;color:var(--mute)}
+.task{font-size:18px;color:var(--ink);font-weight:bold;margin:8px 0 14px}
+.note{font-size:13px;color:#8a7a66;font-family:Arial,sans-serif}
+.sticker{position:absolute;right:22px;top:24px;font-size:56px;transform:rotate(12deg)}
+label.row{display:block;margin:14px 0 4px;font-family:Arial,sans-serif;font-size:14px;color:var(--ink)}
+input[type=range]{width:100%;accent-color:var(--red)}
+textarea,input[type=text]{width:100%;font:16px Georgia,serif;padding:12px;border:2px dashed #c9b998;border-radius:8px;background:#fffef9;margin-top:6px}
+.opts label{display:inline-block;margin:4px 6px 4px 0;padding:8px 12px;border:2px solid #d9cbb0;border-radius:20px;cursor:pointer;font-family:Arial,sans-serif;font-size:14px;background:#fff}
+.opts input{margin-right:6px}
+.emoji{display:flex;gap:8px;margin:8px 0}
+.emoji button{font-size:30px;padding:8px 12px;border:2px solid #d9cbb0;border-radius:12px;background:#fff;cursor:pointer}
+.emoji button.on{border-color:var(--ink);background:#fff3c4}
+.stack{display:flex;height:26px;border-radius:8px;overflow:hidden;background:#eee;margin:10px 0 4px}
+.stack i{display:block;height:100%;transition:width .2s}
+.map{position:relative;height:280px;border:3px solid var(--ink);border-radius:8px;background:#faf3e3;margin:10px 0;cursor:crosshair;font-family:Arial,sans-serif;overflow:hidden}
+.zone{position:absolute;border:2px dashed #b9a985;border-radius:6px;font-size:12px;color:#8a7a66;padding:4px 8px;pointer-events:none}
+.pin{position:absolute;font-size:24px;transform:translate(-50%,-50%);pointer-events:none}
+.stamps{display:flex;flex-wrap:wrap;gap:8px}
+.stamps button,.mini{font:600 14px Arial,sans-serif;padding:9px 12px;border-radius:10px;border:2px solid #d9cbb0;background:#fff;cursor:pointer}
+.stamps button.on{border-color:var(--ink);background:#fff3c4}
+.postcard{border:3px solid var(--ink);border-radius:6px;padding:16px;background:#fffef6;position:relative;margin-top:10px}
+.postcard .stampbox{position:absolute;right:12px;top:10px;font-size:34px;border:2px dashed #999;padding:2px 8px}
+.nav{position:fixed;left:0;right:0;bottom:0;background:rgba(230,217,192,.96);border-top:2px solid #cbb994;padding:10px 14px;display:flex;justify-content:center;align-items:center;gap:14px;font-family:Arial,sans-serif}
+.nav button,.big{background:var(--ink);color:#fff;border:none;border-radius:12px;padding:12px 22px;font:600 16px Arial,sans-serif;cursor:pointer}
+.nav button:disabled{opacity:.35}
+.big{width:100%;margin-top:16px}
 :focus-visible{outline:3px solid #2b6cb0;outline-offset:2px}
-.primary{width:100%;margin-top:18px;padding:16px}
-.hud{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px;font-weight:600;font-size:14px}
-.clock{color:var(--accent);font-variant-numeric:tabular-nums}
-.bar{height:8px;background:#e6e2d8;border-radius:8px;overflow:hidden;margin-bottom:22px}
-.bar i{display:block;height:100%;background:var(--ink);transition:width .4s}
-.choices{display:grid;gap:10px;margin-top:16px}
-.choice{background:#f3f1ea;color:var(--ink);text-align:left;border:2px solid transparent}
-.choice:hover:not(:disabled){background:#e9e5d9}
-.choice.on{border-color:var(--ink);background:#fff}
-.screen{background:#1f1f1f;color:#fff;border-radius:16px;padding:18px 22px;margin:14px 0;font-size:18px;line-height:2}
-.screen .q{color:#ffb4a8}
-.range{width:100%;margin:22px 0 4px;accent-color:var(--ink)}
-.ticks{display:flex;justify-content:space-between;font-size:12px;color:#888}
-.big{font-size:44px;font-weight:800;margin:6px 0}
-.reveal{background:#fdf0ee;border-radius:14px;padding:16px;margin-top:14px}
-.q{margin-top:18px}
-.q label{display:block;margin:8px 0;padding:12px;background:#f5f3ee;border-radius:10px;cursor:pointer}
-textarea,input[type=text]{width:100%;padding:13px;border:1px solid #d9d4c7;border-radius:10px;font-size:16px;margin-top:8px;font-family:inherit}
-.style{background:#f3f1ea;border-radius:16px;padding:18px;margin:14px 0}
-.style b{font-size:26px;display:block}
-@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+.poster{background:#1a1410;padding:12px;border-radius:6px;margin-top:8px}
+.poster input[type=text]{background:#1a1410;color:#f6e7c1;border:none;text-align:center;font-size:19px;margin:4px 0}
+.poster input::placeholder{color:#a59677}
+.poster canvas{display:block;width:100%;height:auto;background:#fff;touch-action:none;cursor:crosshair}
+@media print{body{background:#fff}.nav{display:none}.page{display:block!important;box-shadow:none;break-after:page;border:1px solid #ccc}.big,.stamps,.emoji button:not(.on){}}
 </style>
 </head>
 <body>
-<div class="wrap"><div class="card" id="stage"></div></div>
+<div class="book">
+
+<!-- COVER -->
+<section class="page on">
+  <div class="sticker">🍔</div>
+  <span class="tag">A design research probe kit</span>
+  <h1 class="hand">Canteen<br>Diaries</h1>
+  <p class="task">Six small activities about your lunch break.</p>
+  <p>We're a group of design students trying to understand what the college canteen is <em>really</em> like: the queue, the guessing, the tricks you use to survive. Not what it should be. What it's like for you.</p>
+  <p class="note">Kit no. 1 · Group: Asawari · Yash · Miwa · Kimaya · Amruta · 2026–27</p>
+  <button class="big" onclick="show(1)">Open the kit →</button>
+</section>
+
+<!-- HOW TO -->
+<section class="page">
+  <span class="tag">Before you begin</span>
+  <h2 class="hand">How this works</h2>
+  <ol>
+    <li><b>Take your time.</b> Do one page a day, or all at once. Your answers save on this device as you go.</li>
+    <li><b>No right or wrong.</b> Silly, honest and messy answers are the best ones.</li>
+    <li><b>Photos and drawings upload right here in the kit.</b> Voice notes are optional; if you'd like to send one, use WhatsApp.</li>
+    <li><b>Skip anything you don't feel like doing.</b></li>
+  </ol>
+  <label class="row">What should we call you? (a nickname is fine)</label>
+  <input type="text" data-k="nick" placeholder="e.g. Snack Goblin">
+  <label class="row">I am…</label>
+  <div class="opts" id="roleOpts"></div>
+  <label class="row">How often do you use the canteen?</label>
+  <div class="opts" id="freqOpts"></div>
+</section>
+
+<!-- 1 PIE -->
+<section class="page">
+  <span class="tag">Activity 1 of 6</span>
+  <h2 class="hand">The 15-minute break</h2>
+  <p class="task">Think of your last lunch break at the canteen. Where did the minutes go?</p>
+  <p>Slide each one until the bar is full at 15 minutes (or however long your break really was).</p>
+  <div id="pieRows"></div>
+  <div class="stack" id="stack"></div>
+  <p class="note" id="pieTotal"></p>
+  <label class="row">Which slice surprised you the most?</label>
+  <input type="text" data-k="pieSurprise">
+</section>
+
+<!-- 2 QUEUE VIEW -->
+<section class="page">
+  <span class="tag">Activity 2 of 6</span>
+  <h2 class="hand">Queue view</h2>
+  <p class="task">Next time you're standing in the queue, take a photo of exactly what you see.</p>
+  <p>📸 Take a photo (on a phone this opens your camera) or pick one from your gallery, and upload it right here.</p>
+  <input type="file" id="photoIn" accept="image/*" aria-label="Upload your queue view photo">
+  <img id="photoPrev" alt="Preview of your queue photo" style="display:none;max-width:100%;border-radius:8px;margin-top:10px;border:3px solid #2a2119">
+  <button class="mini" id="photoClear" style="display:none;margin-top:8px" onclick="clearPhoto()">Remove photo</button>
+  <p>Then tell us how it felt.</p>
+  <label class="row">How did you feel right then?</label>
+  <div class="emoji" id="mood"></div>
+  <label class="row">What were you thinking about while you waited?</label>
+  <textarea rows="3" data-k="queueThoughts"></textarea>
+</section>
+
+<!-- 3 CERTAINTY -->
+<section class="page">
+  <span class="tag">Activity 3 of 6</span>
+  <h2 class="hand">The guess-o-meter</h2>
+  <p class="task">Before you walk to the canteen, how much do you actually know?</p>
+  <p>0 = total guess · 10 = I know exactly</p>
+  <div id="certRows"></div>
+  <label class="row">What do you do when you don't know?</label>
+  <textarea rows="2" data-k="whenUnknown"></textarea>
+</section>
+
+<!-- 4 MAP -->
+<section class="page">
+  <span class="tag">Activity 4 of 6</span>
+  <h2 class="hand">Map your canteen</h2>
+  <p class="task">Pick a stamp, then tap the map to drop it. Rough is fine; it's your canteen.</p>
+  <div class="stamps" id="stamps"></div>
+  <div class="map" id="map">
+    <div class="zone" style="left:6px;top:6px;width:60%;height:70px">🍳 Counter / serving area</div>
+    <div class="zone" style="left:6px;bottom:6px;width:65%;height:120px">🪑 Seating area</div>
+    <div class="zone" style="right:6px;top:50%;width:26%;height:50px">🚪 Entrance</div>
+  </div>
+  <button class="mini" onclick="undoPin()">Undo last</button> <button class="mini" onclick="S.pins=[];drawPins();save()">Clear</button>
+  <p class="note">The zones are a guess. Ignore them if your canteen is laid out differently.</p>
+  <label class="row">Tell us about the spot you marked as most chaotic.</label>
+  <textarea rows="2" data-k="mapNote"></textarea>
+  <label class="row">Tell us about the spot you marked as calm. What makes it calm?</label>
+  <textarea rows="2" data-k="mapCalm"></textarea>
+</section>
+
+<!-- 5 WISH + TRICK -->
+<section class="page">
+  <span class="tag">Activity 5 of 6</span>
+  <h2 class="hand">Wishes &amp; workarounds</h2>
+  <p class="task">A canteen genie gives you exactly two wishes for tomorrow's lunch rush.</p>
+  <label class="row">Wish 1</label><input type="text" data-k="wish1">
+  <label class="row">Wish 2</label><input type="text" data-k="wish2">
+  <label class="row">…and one thing you'd never let the genie change?</label><input type="text" data-k="keep">
+  <p class="task" style="margin-top:22px">What's the sneakiest trick you use to beat the rush?</p>
+  <textarea rows="3" data-k="trick" placeholder="Type it here, or send a 30-second voice note on WhatsApp"></textarea>
+</section>
+
+<!-- 6 POSTCARD -->
+<section class="page">
+  <span class="tag">Activity 6 of 6</span>
+  <h2 class="hand">Postcard to the canteen</h2>
+  <p class="task">Write to whoever runs the canteen. One thing you love, one thing that drives you up the wall.</p>
+  <div class="postcard hand">
+    <div class="stampbox">🍜</div>
+    <p style="margin:0 0 6px">Dear Canteen,</p>
+    <textarea rows="5" data-k="postcard" placeholder="I love…   but please fix…"></textarea>
+    <p style="text-align:right;margin:8px 0 0">– <span id="sign">a student</span></p>
+  </div>
+  <p class="task" style="margin-top:26px">Now doodle the canteen as a movie poster.</p>
+  <p>If your canteen were a film, what would its poster look like? Draw it, then name the movie. Stick figures welcome.</p>
+  <div class="poster">
+    <input type="text" data-k="posterTitle" class="hand" placeholder="MOVIE TITLE (e.g. The Queue Awakens)">
+    <canvas id="doodle" width="420" height="560" aria-label="Drawing area for your movie poster"></canvas>
+    <input type="text" data-k="posterTagline" placeholder="Tagline (e.g. 15 minutes. 40 people. 1 samosa.)">
+  </div>
+  <div class="stamps" id="pens" style="margin-top:10px"></div>
+  <button class="mini" style="margin-top:8px" onclick="clearDoodle()">Clear poster</button>
+</section>
+
+<!-- FINISH -->
+<section class="page">
+  <div class="sticker">🎉</div>
+  <span class="tag">All done</span>
+  <h2 class="hand">Thank you!</h2>
+  <p>Press submit to send your answers, photo and poster to us. Voice notes are optional; send them on WhatsApp if you'd like.</p>
+  <label class="row">Anything you've just gotten used to at the canteen, even though it could be better?</label>
+  <textarea rows="3" data-k="usedTo"></textarea>
+  <label class="row">Are we okay to quote your answers (anonymously) in our project?</label>
+  <div class="opts" id="consentOpts"></div>
+  <button class="big" id="submitBtn" onclick="submitKit()">Submit my kit</button>
+  <button class="mini" style="margin-top:10px" onclick="backup()">Save a backup copy to this device</button>
+  <p class="note" id="msg"></p>
+</section>
+
+</div>
+<div class="nav"><button id="back" onclick="show(cur-1)">← Back</button><span id="pg"></span><button id="next" onclick="show(cur+1)">Next →</button></div>
 
 <script>
-/* ============ CONFIG ============ */
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxWx4C_roP-w8X_8FpXDOuTyhJBlLk38Xy7RRgokvxVj6QK75BC6SjADLep0fq6fGh-/exec";
-const CLOCK = ["15:00","12:40","10:20","08:32","05:45","02:50"];
+const GOOGLE_SCRIPT_URL="https://script.google.com/macros/s/AKfycbwmempHNFIn2y_TubZhaKfQSTtVH7oJqfuTWFAcUNI1afAXk_L7FMB7eV0BonjIJw5Y/exec";
+const KEY="canteenDiaries",S={mood:"",pins:[],stamp:"😤",photo:"",doodle:""};
+const $=s=>document.querySelector(s),pages=[...document.querySelectorAll(".page")];let cur=0;
 
-const A = {}, T = {};
-let t0 = 0;
-const $ = id => document.getElementById(id);
-const shuffle = a => a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);
-const lap = () => { const s=+((Date.now()-t0)/1000).toFixed(1); t0=Date.now(); return s; };
+function show(n){cur=Math.max(0,Math.min(pages.length-1,n));pages.forEach((p,i)=>p.classList.toggle("on",i===cur));
+  $("#pg").textContent=(cur+1)+" / "+pages.length;$("#back").disabled=cur===0;$("#next").style.visibility=cur===pages.length-1?"hidden":"visible";scrollTo(0,0);}
 
-function shell(step,total,title,sub,clock){
-  $("stage").innerHTML = `
-    <div class="hud"><span>Mission ${step+1} of ${total}</span><span class="clock">${clock?"Break time left: "+clock:""}</span></div>
-    <div class="bar"><i style="width:${(step/total)*100}%"></i></div>
-    <h2>${title}</h2><p>${sub}</p><div id="body"></div>`;
-  t0 = Date.now();
-  return $("body");
-}
-function options(el,opts,cb){
-  const box=document.createElement("div"); box.className="choices";
-  opts.forEach(o=>{const b=document.createElement("button");b.className="choice";b.textContent=o;b.onclick=()=>cb(o,b);box.appendChild(b);});
-  el.appendChild(box); return box;
-}
+function radios(id,key,list){$(id).innerHTML=list.map(x=>`<label><input type="radio" name="${key}" data-k="${key}" value="${x}">${x}</label>`).join("");}
+radios("#roleOpts","role",["Student","Canteen staff"]);
+radios("#freqOpts","freq",["Every day","2–3 days a week","Once a week","Less than once a week","Almost never"]);
+radios("#consentOpts","consent",["Yes, anonymously","No, keep it private"]);
 
-/* Pick exactly 2 (or the "none" option) + optional "something else" text */
-function pickTwo(b,opts,none,done){
-  const picks=[];
-  const sync=()=>{ go.disabled = !(picks.length===2 || picks[0]===none); };
-  const box=options(b,shuffle(opts).concat(none),(o,btn)=>{
-    const i=picks.indexOf(o);
-    if(i>-1){picks.splice(i,1);btn.classList.remove("on");}
-    else if(o===none){picks.length=0;box.querySelectorAll(".on").forEach(x=>x.classList.remove("on"));picks.push(o);btn.classList.add("on");}
-    else{
-      if(picks[0]===none){picks.length=0;box.querySelectorAll(".on").forEach(x=>x.classList.remove("on"));}
-      if(picks.length<2){picks.push(o);btn.classList.add("on");}
-    }
-    sync();
-  });
-  const other=document.createElement("input"); other.type="text"; other.placeholder="Something else that would help more? (optional)"; b.appendChild(other);
-  const go=document.createElement("button"); go.className="primary"; go.textContent="Confirm"; go.disabled=true;
-  go.onclick=()=>done(picks.map(p=>p.split(":")[0]).join(" + "),other.value); b.appendChild(go);
-}
+const PIE=[["walk","🚶 Walking there","#6c8ebf"],["queue","🧍 Standing in the queue","#c0392b"],["order","💳 Ordering & paying","#e0a030"],["food","⏳ Waiting for food","#a05c9a"],["eat","🍜 Actually eating","#2e7d4f"]];
+$("#pieRows").innerHTML=PIE.map(p=>`<label class="row">${p[1]}: <b id="v_${p[0]}">0</b> min</label><input type="range" min="0" max="15" value="0" data-k="pie_${p[0]}">`).join("");
+$("#stack").innerHTML=PIE.map(p=>`<i id="s_${p[0]}" style="background:${p[2]}"></i>`).join("");
+function updatePie(){let t=0;PIE.forEach(p=>t+=+$(`[data-k=pie_${p[0]}]`).value);
+  PIE.forEach(p=>{const v=+$(`[data-k=pie_${p[0]}]`).value;$("#v_"+p[0]).textContent=v;$("#s_"+p[0]).style.width=(t?v/Math.max(t,15)*100:0)+"%";});
+  $("#pieTotal").textContent="Total: "+t+" min"+(t===15?" ✓":" (aim for the length of your break)");}
 
-function rapid(list,i,total,step,clock,done){
-  const b=shell(step,total,"Would you still wait?","Rapid fire. Pick fast.",clock), s=list[i];
-  b.innerHTML=`<p class="small">Situation ${i+1} of ${list.length}</p><div style="font-size:22px;font-weight:600;margin:6px 0">${s.text}</div>`;
-  options(b,s.opts,o=>{A[s.key]=o;T[s.key]=lap(); i+1<list.length?rapid(list,i+1,total,step,clock,done):done();});
-}
+const CERT=[["crowd","How crowded it is"],["wait","How long the wait will be"],["avail","Whether your item is available"],["seat","Whether you'll find a seat"],["status","When your order will be ready"]];
+$("#certRows").innerHTML=CERT.map(c=>`<label class="row">${c[1]}: <b id="c_${c[0]}">5</b></label><input type="range" min="0" max="10" value="5" data-k="cert_${c[0]}">`).join("");
+function updateCert(){CERT.forEach(c=>$("#c_"+c[0]).textContent=$(`[data-k=cert_${c[0]}]`).value);}
 
-/* ============ INTRO ============ */
-function intro(){
-  $("stage").innerHTML=`
-    <div style="font-size:48px">🍔</div>
-    <h1>Canteen Rush</h1>
-    <p>A short game about the college canteen at lunch. No right or wrong answers, go with your gut. Takes about 7 minutes and is anonymous.</p>
-    <p><strong>Who are you?</strong></p>
-    <div class="choices">
-      <button class="choice" onclick="A.role='student';m1()">🎓 I'm a student</button>
-      <button class="choice" onclick="A.role='staff';s1()">🍳 I work in the canteen</button>
-    </div>`;
-}
+$("#mood").innerHTML=["😄","🙂","😐","😤","😩"].map(e=>`<button type="button" onclick="setMood('${e}')">${e}</button>`).join("");
+function setMood(e){S.mood=e;drawMood();save();}
+function drawMood(){document.querySelectorAll("#mood button").forEach(b=>b.classList.toggle("on",b.textContent===S.mood));}
 
-/* ============ STUDENT FLOW (6 missions) ============ */
-const ST=6;
-function m1(){
-  const b=shell(0,ST,"You have 15 minutes","Class ended at 1:00 PM. Next class starts at 1:15 PM. You've just reached the canteen. What do you do first?",CLOCK[0]);
-  options(b,shuffle(["🍔 Check what's available","👀 Look at the queue","🪑 Find a seat first","🚶 Leave and get food elsewhere"]),o=>{A.firstAction=o;T.firstAction=lap();m2();});
-}
-function m2(){
-  const b=shell(1,ST,"Pick your nightmare","Which situation would annoy you the MOST?",CLOCK[1]);
-  options(b,shuffle(["15 people ahead of you","Your favourite item is unavailable","You ordered but don't know when it'll be ready","You can't find a place to sit","Something else annoys me more"]),o=>{A.nightmare=o;T.nightmare=lap();m3();});
-}
-function m3(){
-  const actual=[6,12,18][Math.floor(Math.random()*3)];   // randomised stimulus, recorded
-  const b=shell(2,ST,"Guess the wait","Your order is being prepared. There are 8 people waiting and the counter is busy. How long do you think you'll wait?",CLOCK[2]);
-  b.innerHTML=`<input class="range" id="wait" type="range" min="1" max="20" value="8" aria-label="Guessed wait in minutes">
-    <div class="ticks"><span>1 min</span><span>5</span><span>10</span><span>15</span><span>20+ min</span></div>
-    <div class="big" id="waitOut">8 min</div><button class="primary" id="lock">Lock in my guess</button>`;
-  const r=$("wait"),out=$("waitOut");
-  r.oninput=()=>out.textContent=(r.value==20?"20+":r.value)+" min";
-  $("lock").onclick=()=>{
-    A.guessedWait=+r.value;A.actualWait=actual;T.guessedWait=lap();
-    const g=A.guessedWait,gl=g==20?"20+":g;
-    const msg=actual>g?`You guessed ${gl} min. Actual wait: ${actual} minutes. 😭`:actual<g?`You guessed ${gl} min. Actual wait: ${actual} minutes. Faster than you feared.`:`You guessed ${gl} min. Spot on: ${actual} minutes.`;
-    b.innerHTML=`<div class="reveal"><strong>${msg}</strong></div><h2 style="margin-top:22px">Would you have waited?</h2>`;
-    options(b,["Yes, I'd wait","No, I'd leave"],o=>{
-      A.wouldWait=o;
-      b.innerHTML=`<h2>What would have made the wait feel better?</h2>`;
-      options(b,shuffle(["“You're #8 in the queue”","“Ready in ~10 min”","“Order is being prepared”","“We'll notify you when it's ready”","Nothing – I just want the food"]),o2=>{A.waitFix=o2;T.waitFix=lap();m4();});
-    });
-  };
-}
-function m4(){
-  const b=shell(3,ST,"Canteen telepathy","This is what the canteen board shows right now. Some things are missing.",CLOCK[3]);
-  b.innerHTML=`<div class="screen">🍜 Maggi – ₹40<br><span class="q">❓ Availability</span><br><span class="q">👥 Queue: ???</span><br><span class="q">⏱️ Wait: ???</span><br><span class="q">🪑 Seats: ???</span></div>
-    <p><strong>You can reveal ONLY ONE piece of information before joining the queue. Which one?</strong></p>`;
-  options(b,shuffle(["🍜 Availability","👥 Queue size","⏱️ Estimated waiting time","🪑 Seating availability","None – I'd decide on the spot"]),o=>{A.oneInfo=o;T.oneInfo=lap();m5();});
-}
-function m5(){
-  const b=shell(4,ST,"You are the canteen manager","You can make two changes for tomorrow's lunch rush. Pick exactly 2 (or \"none of these\").",CLOCK[4]);
-  pickTwo(b,[
-    "Live menu: see what's available before reaching the counter",
-    "Queue tracker: see how many people are ahead",
-    "Order tracker: see if your food is preparing or ready",
-    "Pre-order: order before reaching the canteen",
-    "Seat finder: see available seating",
-    "Extra counter: more staff and a second billing line",
-    "Faster payment: UPI/QR at the counter"],
-    "None of these would help much",
-    (v,other)=>{A.upgrades=v;A.upgradesOther=other;T.upgrades=lap();m6();});
-}
-const RAPID=[
-  {key:"w1",text:"12 people ahead of you. Your break is 20 minutes.",opts:["Wait","Leave"]},
-  {key:"w2",text:"Your favourite food is unavailable. Another item has no queue.",opts:["Wait for it","Switch item","Leave"]},
-  {key:"w3",text:"Order placed. You have no idea when it will be ready.",opts:["Wait","Keep checking","Leave"]},
-  {key:"w4",text:"The queue is long, but the app says the wait is 5 minutes.",opts:["Wait","Leave"]},
-  {key:"w5",text:"You can order on your phone now and collect in 10 minutes, but you must pick the item without seeing the queue.",opts:["Use it","Stick to the counter","Depends"]}
-];
-function m6(){rapid(RAPID,0,ST,5,CLOCK[5],finishStudent);}
+const STAMPS=[["😤","Chaos spot"],["😌","Calm spot"],["🧍","Where I stand"],["🪑","Where I sit"]];
+$("#stamps").innerHTML=STAMPS.map(s=>`<button type="button" data-e="${s[0]}">${s[0]} ${s[1]}</button>`).join("");
+$("#stamps").onclick=e=>{const b=e.target.closest("button");if(b){S.stamp=b.dataset.e;drawStamps();}};
+function drawStamps(){document.querySelectorAll("#stamps button").forEach(b=>b.classList.toggle("on",b.dataset.e===S.stamp));}
+$("#map").onclick=e=>{const r=$("#map").getBoundingClientRect();S.pins.push({e:S.stamp,x:+((e.clientX-r.left)/r.width*100).toFixed(1),y:+((e.clientY-r.top)/r.height*100).toFixed(1)});drawPins();save();};
+function drawPins(){document.querySelectorAll(".pin").forEach(p=>p.remove());S.pins.forEach(p=>{const d=document.createElement("span");d.className="pin";d.textContent=p.e;d.style.left=p.x+"%";d.style.top=p.y+"%";$("#map").appendChild(d);});}
+function undoPin(){S.pins.pop();drawPins();save();}
 
-function survivalStyle(){
-  const v=RAPID.map(r=>A[r.key]),leaves=v.filter(x=>x==="Leave").length,waits=v.filter(x=>x==="Wait"||x==="Wait for it").length;
-  if(A.firstAction.includes("Leave")||leaves>=2)return["The Escape Artist 🏃","You don't gamble with break time. If it looks slow, you're gone."];
-  if(waits>=3)return["The Queue Warrior ⚔️","You'll stand in line for the food you want."];
-  return["The Strategist 🧠","You weigh the situation and adapt as things change."];
-}
-const radios=(n,a)=>a.map(x=>`<label><input type="radio" name="${n}" value="${x}"> ${x}</label>`).join("");
-function finishStudent(){
-  const [name,desc]=survivalStyle();A.style=name;
-  $("stage").innerHTML=`
-    <div style="font-size:48px">🎉</div><h1>Break over!</h1>
-    <div class="style"><span class="small">Your canteen survival style (just for fun)</span><b>${name}</b><p style="margin:0">${desc}</p></div>
-    <div class="q"><strong>Which situation would make you most likely to leave, and why? (optional)</strong><textarea id="leaveWhy" rows="2"></textarea></div>
-    <div class="q"><strong>How often do you use the canteen?</strong>${radios("freq",["Every day / 4–6 days a week","2–3 days a week","Once a week","Less than once a week","Almost never"])}</div>
-    <div class="q"><strong>What do you usually buy? (any)</strong>
-      ${["Full meal","Snack","Beverage"].map(x=>`<label><input type="checkbox" name="buy" value="${x}"> ${x}</label>`).join("")}</div>
-    <div class="q"><strong>Food preference</strong>${radios("diet",["Vegetarian","Non-vegetarian","No preference"])}</div>
-    <div class="q"><strong>Describe the canteen rush in one word.</strong><input type="text" id="oneWord" placeholder="e.g. chaotic"></div>
-    <div class="q"><strong>Anything you've just gotten used to at the canteen? (optional)</strong><textarea id="extra" rows="2"></textarea></div>
-    <button class="primary" id="submitBtn" onclick="submitResults()">Submit my response</button><p id="msg" class="small"></p>`;
-}
+$("#photoIn").onchange=e=>{const f=e.target.files[0];if(!f)return;const img=new Image(),u=URL.createObjectURL(f);
+  img.onload=()=>{const k=Math.min(1,900/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=img.width*k;c.height=img.height*k;
+    c.getContext("2d").drawImage(img,0,0,c.width,c.height);S.photo=c.toDataURL("image/jpeg",.7);URL.revokeObjectURL(u);drawPhoto();save();};img.src=u;};
+function drawPhoto(){const p=$("#photoPrev");p.style.display=S.photo?"block":"none";if(S.photo)p.src=S.photo;$("#photoClear").style.display=S.photo?"inline-block":"none";}
+function clearPhoto(){S.photo="";$("#photoIn").value="";drawPhoto();save();}
 
-/* ============ STAFF FLOW (5 missions) ============ */
-const SS=5;
-function s1(){
-  const b=shell(0,SS,"Your role","What best describes your role in the canteen?");
-  options(b,["Owner / manager","Cook / food preparation","Cashier / counter","Other"],o=>{A.staffRole=o;T.staffRole=lap();s2();});
-}
-function s2(){
-  const b=shell(1,SS,"The lunch rush hits","It's the busiest 30 minutes of the day. Which part is hardest to handle?");
-  options(b,shuffle(["Taking orders","Taking payments","Handing over food / tokens","Answering questions (menu, availability)","Preparing food on time","Handling everything at once"]),o=>{A.staffHardest=o;T.staffHardest=lap();s3();});
-}
-function s3(){
-  const b=shell(2,SS,"Pick your pressure","What puts the most pressure on you during the rush?");
-  options(b,shuffle(["A long queue","Constant interruptions","Order mistakes","Running out of items","Payment delays","Everything happening together","Something else"]),o=>{A.staffPressure=o;T.staffPressure=lap();s4();});
-}
-const SRAPID=[
-  {key:"s1",text:"A student asks if an item is available while you're mid-order.",opts:["Answer immediately","Point to the menu board","Ask them to wait"]},
-  {key:"s2",text:"An item runs out during the rush.",opts:["Tell each student at the counter","Update the board","Only say when asked"]},
-  {key:"s3",text:"Students could send orders from their phones and you'd see a list of them.",opts:["That would help","That would add work","Depends"]},
-  {key:"s4",text:"Ordering and payment happen at the same counter.",opts:["Fine as it is","I'd separate them","No opinion"]}
-];
-function s4(){rapid(SRAPID,0,SS,3,"",s5);}
-function s5(){
-  const b=shell(4,SS,"You are the owner","You can make two changes for tomorrow's lunch rush. Pick exactly 2 (or \"none of these\").");
-  pickTwo(b,[
-    "Digital order list: see student orders in one place",
-    "Separate payment counter or QR payments",
-    "Availability board that's easy to update",
-    "More staff at peak hours",
-    "Token / ready display for collection",
-    "Menu boards or signs so fewer questions reach me"],
-    "None of these would help much",
-    (v,other)=>{A.staffUpgrades=v;A.staffUpgradesOther=other;T.staffUpgrades=lap();finishStaff();});
-}
-function finishStaff(){
-  $("stage").innerHTML=`
-    <div style="font-size:48px">🎉</div><h1>Shift over!</h1><p>Thanks for helping us understand the rush.</p>
-    <div class="q"><strong>Describe the lunch rush in one word.</strong><input type="text" id="oneWord" placeholder="e.g. chaotic"></div>
-    <div class="q"><strong>Anything students do that makes the rush harder, or easier? (optional)</strong><textarea id="extra" rows="2"></textarea></div>
-    <button class="primary" id="submitBtn" onclick="submitResults()">Submit my response</button><p id="msg" class="small"></p>`;
-}
+const cv=$("#doodle"),cx=cv.getContext("2d"),PENS=[["#111","⚫","Black",4],["#c0392b","🔴","Red",4],["#2b6cb0","🔵","Blue",4],["#e0a030","🟡","Yellow",4],["#2e7d4f","🟢","Green",4],["#ffffff","🧽","Eraser",18]];
+let D={c:PENS[0][0],w:PENS[0][3]},drawing=false,last=null;
+$("#pens").innerHTML=PENS.map((p,i)=>`<button type="button" data-i="${i}">${p[1]} ${p[2]}</button>`).join("");
+$("#pens").onclick=e=>{const b=e.target.closest("button");if(b){const p=PENS[b.dataset.i];D={c:p[0],w:p[3]};drawPens();}};
+function drawPens(){document.querySelectorAll("#pens button").forEach(b=>b.classList.toggle("on",PENS[b.dataset.i][0]===D.c));}
+function initDoodle(){cx.fillStyle="#fff";cx.fillRect(0,0,cv.width,cv.height);if(S.doodle){const i=new Image();i.onload=()=>cx.drawImage(i,0,0,cv.width,cv.height);i.src=S.doodle;}}
+function pt(e){const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*cv.width/r.width,(e.clientY-r.top)*cv.height/r.height];}
+cv.onpointerdown=e=>{drawing=true;last=pt(e);cv.setPointerCapture(e.pointerId);cx.fillStyle=D.c;cx.beginPath();cx.arc(last[0],last[1],D.w/2,0,7);cx.fill();};
+cv.onpointermove=e=>{if(!drawing)return;const p=pt(e);cx.strokeStyle=D.c;cx.lineWidth=D.w;cx.lineCap="round";cx.beginPath();cx.moveTo(last[0],last[1]);cx.lineTo(p[0],p[1]);cx.stroke();last=p;};
+const endD=()=>{if(!drawing)return;drawing=false;S.doodle=cv.toDataURL("image/jpeg",.8);save();};
+cv.onpointerup=endD;cv.onpointercancel=endD;
+function clearDoodle(){S.doodle="";initDoodle();save();}
 
-/* ============ SUBMIT ============ */
-async function submitResults(){
-  const btn=$("submitBtn"),msg=$("msg"),val=n=>{const x=document.querySelector(`input[name="${n}"]:checked`);return x?x.value:"";};
-  const data=Object.assign({timestamp:new Date().toISOString()},A,{
-    frequency:val("freq"),diet:val("diet"),
-    usuallyBuys:[...document.querySelectorAll('input[name="buy"]:checked')].map(x=>x.value).join(" | "),
-    leaveWhy:$("leaveWhy")?$("leaveWhy").value:"",
-    oneWord:$("oneWord").value,extra:$("extra").value,timings:JSON.stringify(T)});
-  btn.disabled=true;btn.textContent="Saving…";
-  try{
-    await fetch(GOOGLE_SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});
-    msg.textContent="✓ Response saved. Thank you!";btn.textContent="Response saved";
-  }catch(e){
-    console.error(e);msg.textContent="Couldn't save. Check your connection and try again.";
-    btn.disabled=false;btn.textContent="Submit my response";
-  }
+function collect(){const data={kit:"canteen-diaries",timestamp:new Date().toISOString(),mood:S.mood,mapPins:JSON.stringify(S.pins),photo:S.photo,doodle:S.doodle};
+  document.querySelectorAll("[data-k]").forEach(e=>{if(e.type==="radio"){if(e.checked)data[e.dataset.k]=e.value;}else data[e.dataset.k]=e.value;});return data;}
+function backup(){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(collect(),null,1)],{type:"application/json"}));
+  a.download="canteen-diaries-"+(($("[data-k=nick]").value||"me").replace(/\W+/g,"_"))+".json";a.click();}
+
+function save(){try{const f={};document.querySelectorAll("[data-k]").forEach(e=>{if(e.type==="radio"){if(e.checked)f[e.dataset.k]=e.value;}else f[e.dataset.k]=e.value;});localStorage.setItem(KEY,JSON.stringify({S,f}));}catch(e){}}
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||"null");if(!d)return;Object.assign(S,d.S);
+  document.querySelectorAll("[data-k]").forEach(e=>{const v=d.f[e.dataset.k];if(v===undefined)return;if(e.type==="radio")e.checked=e.value===v;else e.value=v;});}catch(e){}}
+document.addEventListener("input",()=>{updatePie();updateCert();const n=$("[data-k=nick]").value.trim();$("#sign").textContent=n||"a student";save();});
+document.addEventListener("change",save);
+
+load();updatePie();updateCert();drawMood();drawStamps();drawPins();drawPhoto();drawPens();initDoodle();
+$("#sign").textContent=$("[data-k=nick]").value.trim()||"a student";show(0);
+
+async function submitKit(){
+  const btn=$("#submitBtn"),msg=$("#msg"),data=collect();
+  btn.disabled=true;btn.textContent="Sending…";
+  try{await fetch(GOOGLE_SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});
+    msg.textContent="✓ Sent. Thank you!";btn.textContent="Sent";}
+  catch(e){msg.textContent="Couldn't send. Check your connection and try again, or save a backup copy below.";btn.disabled=false;btn.textContent="Submit my kit";}
 }
-intro();
 </script>
 </body>
 </html>
